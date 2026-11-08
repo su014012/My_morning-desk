@@ -1,5 +1,5 @@
 // 나의 아침 데스크 — 실시간 데이터 (Vercel 서버 함수)
-// GET /api/live → { at, coin: { BTC, ETH }, weather }
+// GET /api/live → { at, coin: { BTC, ETH, BTC_USD }, weather }
 // 코인: 업비트 공개 시세 API / 날씨: Open-Meteo (서울, API 키 불필요)
 
 const WMO = {
@@ -20,10 +20,12 @@ async function getJson(url) {
 }
 
 async function coin() {
-  const rows = await getJson('https://api.upbit.com/v1/ticker?markets=KRW-BTC,KRW-ETH');
+  const rows = await getJson('https://api.upbit.com/v1/ticker?markets=KRW-BTC,KRW-ETH,USDT-BTC');
   const out = {};
   for (const t of rows) {
-    out[t.market.replace('KRW-', '')] = { price: t.trade_price, rate: t.signed_change_rate };
+    // USDT-BTC(업비트 USDT 마켓)는 달러 시세로 사용
+    const key = t.market === 'USDT-BTC' ? 'BTC_USD' : t.market.replace('KRW-', '');
+    out[key] = { price: t.trade_price, rate: t.signed_change_rate };
   }
   return out;
 }

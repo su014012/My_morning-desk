@@ -283,7 +283,7 @@ textarea{width:100%;min-height:120px;resize:vertical;padding:10px;border:1px sol
           <h3>코인 시장 <span class="tag down">약세</span><span class="live" id="coinLive" hidden></span></h3>
           <div class="stats">
             <div class="stat"><span class="k">BTC (원)</span><span class="v num" id="liveBtc">1억 352만</span></div>
-            <div class="stat"><span class="k">BTC (달러)</span><span class="v num">≈ $75,700</span></div>
+            <div class="stat"><span class="k">BTC (달러)</span><span class="v num" id="liveBtcUsd">≈ $75,700</span></div>
             <div class="stat"><span class="k">ETH (원)</span><span class="v num" id="liveEth">306.2만</span></div>
             <div class="stat"><span class="k">고점 대비</span><span class="v num down">−40%</span></div>
           </div>
@@ -630,7 +630,7 @@ textarea{width:100%;min-height:120px;resize:vertical;padding:10px;border:1px sol
     const won=v=>v>=1e8?(Math.floor(v/1e8)+'억 '+Math.round((v%1e8)/1e4).toLocaleString('ko-KR')+'만'):v>=1e4?((v/1e4).toFixed(1).replace(/\.0$/,'')+'만'):Math.round(v).toLocaleString('ko-KR');
     const pct=r=>(r>0?'▲':r<0?'▼':'')+Math.abs(r*100).toFixed(2)+'%';
     const setC=(id,c)=>{const el=document.getElementById(id);if(!el||!c)return;el.textContent=won(c.price)+' '+pct(c.rate);el.classList.remove('up','down');if(c.rate>0)el.classList.add('up');else if(c.rate<0)el.classList.add('down');};
-    if(d.coin){setC('liveBtc',d.coin.BTC);setC('liveEth',d.coin.ETH);const t=document.getElementById('coinLive');t.textContent='실시간 '+hm;t.hidden=false;}
+    if(d.coin){setC('liveBtc',d.coin.BTC);setC('liveEth',d.coin.ETH);if(d.coin.BTC_USD){const u=document.getElementById('liveBtcUsd'),c=d.coin.BTC_USD;u.textContent='$'+Math.round(c.price).toLocaleString('en-US')+' '+pct(c.rate);u.classList.remove('up','down');if(c.rate>0)u.classList.add('up');else if(c.rate<0)u.classList.add('down');}const t=document.getElementById('coinLive');t.textContent='실시간 '+hm;t.hidden=false;}
     if(d.weather){const w=d.weather;
       document.getElementById('wxNow').textContent=Math.round(w.temp)+'°';
       document.getElementById('wxDesc').textContent='지금 '+w.desc;
