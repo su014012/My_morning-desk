@@ -153,6 +153,17 @@ h3{font:600 14px/1.4 var(--f-body);margin:0}
 .watch .w-main{flex:1;min-width:0}
 .watch small{display:block;color:var(--muted);font-size:12px}
 .empty-job{font-size:13px;color:var(--muted);padding:8px 10px;border:1px dashed var(--line);border-radius:6px}
+.band{margin:0}
+.band-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media (max-width:900px){.band-grid{grid-template-columns:1fr}}
+.lane{min-width:0;display:flex;flex-direction:column}
+.lane-h{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding-bottom:6px;border-bottom:2px solid var(--ink);margin-bottom:10px}
+.lane-h h3{font:700 16px var(--f-display)}
+.badge.soft{background:var(--accent-soft);color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips a{padding:5px 10px;border:1px solid var(--line);border-radius:999px;font-size:12px;text-decoration:none;color:var(--ink);background:var(--bg)}
+.chips a:hover{border-color:var(--accent);color:var(--accent)}
+.st.check{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
 /* Footer */
 footer{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
 @media (max-width:800px){footer{grid-template-columns:1fr}}
@@ -333,51 +344,81 @@ textarea{width:100%;min-height:120px;resize:vertical;padding:10px;border:1px sol
       </div>
     </section>
 
-    <section>
-      <h2>💼 남성 요양보호사 공고 <small id="jobsChecked"></small></h2>
-      <div class="me">조건: <b>남성</b> · 구리·갈매·남양주·강동·광진·중랑 · 내 자격: 요양보호사 · 운전면허 · IT 약 25년 · 며칠 상주 가능</div>
+  </div>
+</div>
 
-      <div class="alert" id="jobAlert" hidden></div>
-
+<section class="band" aria-labelledby="jobsTitle">
+  <h2 id="jobsTitle">💼 맞춤 구인구직 <small id="jobsChecked"></small></h2>
+  <div class="band-grid">
+    <div class="lane">
+      <div class="lane-h"><h3>🧓 요양보호사</h3><span class="badge soft">남성</span></div>
+      <div class="me">요양보호사 자격증 · 운전면허 · 며칠 상주 가능</div>
+      <div class="alert" id="careAlert" hidden></div>
       <div class="pin">
         <div class="pin-h"><b>📌 다사랑 방문요양센터</b><span class="badge">필수</span></div>
         <div id="dasarang"></div>
-        <a class="btn" style="margin-top:8px" href="https://senior.saramin.co.kr/recruitment?keyword=%EB%8B%A4%EC%82%AC%EB%9E%91" target="_blank" rel="noopener">‘다사랑’ 공고 검색 ↗</a>
+        <a class="more" href="https://senior.saramin.co.kr/recruitment?keyword=%EB%8B%A4%EC%82%AC%EB%9E%91" target="_blank" rel="noopener">‘다사랑’ 공고 검색 ↗</a>
       </div>
+      <div class="subh">요양보호사 공고 · 강동 · 잠실 · 강남 · 여의도</div>
+      <div id="carePosts"></div>
+      <div class="subh">구리 · 남양주 기관 · 시청 일자리</div>
+      <ul class="watch" id="careWatch"></ul>
+      <div class="subh">바로 검색</div>
+      <div class="chips">
+        <a href="https://www.yoyangnara.com/bbs/search.php?sfl=wr_subject&sop=and&stx=%EB%82%A8%EC%9E%90" target="_blank" rel="noopener">요양나라 ‘남자’</a>
+        <a href="https://www.carepartner.kr/jobs?city=%EA%B0%95%EB%8F%99" target="_blank" rel="noopener">케어파트너 강동</a>
+        <a href="https://www.carepartner.kr/jobs?city=%EC%86%A1%ED%8C%8C" target="_blank" rel="noopener">케어파트너 송파(잠실)</a>
+        <a href="https://www.carepartner.kr/jobs?city=%EA%B0%95%EB%82%A8" target="_blank" rel="noopener">케어파트너 강남</a>
+        <a href="https://www.carepartner.kr/jobs?city=%EC%98%81%EB%93%B1%ED%8F%AC" target="_blank" rel="noopener">케어파트너 영등포(여의도)</a>
+      </div>
+    </div>
 
-      <div class="subh">남성 조건 공고 (지역 내)</div>
-      <div id="maleJobs"></div>
+    <div class="lane">
+      <div class="lane-h"><h3>💻 IT · 금융 SI</h3><span class="badge soft">백엔드 · 배치 · COBOL · 차세대</span></div>
+      <div class="me">IT 경력 25년+ · COBOL/CICS·AS400 · Java/Spring · ProFrame·BXM 배치 · 금융권 다수</div>
+      <div class="alert" id="itAlert" hidden></div>
+      <div id="itPosts"></div>
+      <div class="subh">바로 검색</div>
+      <div class="chips">
+        <a href="https://www.jobkorea.co.kr/Search/?stext=COBOL" target="_blank" rel="noopener">잡코리아 COBOL</a>
+        <a href="https://www.jobkorea.co.kr/Search/?stext=%EA%B8%88%EC%9C%B5%EA%B6%8C+%EC%B0%A8%EC%84%B8%EB%8C%80+%ED%94%84%EB%A1%9C%EC%A0%9D%ED%8A%B8" target="_blank" rel="noopener">잡코리아 금융 차세대</a>
+        <a href="https://www.jobkorea.co.kr/Search/?stext=%EB%B0%B0%EC%B9%98+%EA%B0%9C%EB%B0%9C+%ED%94%84%EB%A6%AC%EB%9E%9C%EC%84%9C" target="_blank" rel="noopener">잡코리아 배치 프리랜서</a>
+        <a href="https://www.elancer.co.kr/" target="_blank" rel="noopener">이랜서</a>
+        <a href="https://www.wishket.com/project/" target="_blank" rel="noopener">위시켓</a>
+        <a href="https://www.saramin.co.kr/zf_user/search?searchword=%EC%B0%A8%EC%84%B8%EB%8C%80%20%EB%B0%B0%EC%B9%98" target="_blank" rel="noopener">사람인 차세대 배치</a>
+      </div>
+    </div>
+  </div>
 
-      <div class="subh">관심 기관 · 실버타운 채용 감시</div>
-      <ul class="watch" id="watch"></ul>
-
-      <div class="subh">남성·지역 바로 검색</div>
-      <ul class="jobs">
-        <li><a href="https://www.yoyangnara.com/bbs/search.php?sfl=wr_subject&sop=and&stx=%EB%82%A8%EC%9E%90" target="_blank" rel="noopener"><span><b>요양나라 · ‘남자’ 공고</b><small>요양보호사 전문 구인 게시판</small></span><span class="go">↗</span></a></li>
-        <li><a href="https://www.carepartner.kr/jobs?city=%EA%B5%AC%EB%A6%AC" target="_blank" rel="noopener"><span><b>케어파트너 · 구리</b><small>남자어르신 공고 확인</small></span><span class="go">↗</span></a></li>
-        <li><a href="https://www.carepartner.kr/jobs?city=%EB%82%A8%EC%96%91%EC%A3%BC" target="_blank" rel="noopener"><span><b>케어파트너 · 남양주</b><small>갈매·별내·다산 포함</small></span><span class="go">↗</span></a></li>
-        <li><a href="https://www.jobkorea.co.kr/Search/?stext=%EB%82%A8%EC%9E%90+%EC%9A%94%EC%96%91%EB%B3%B4%ED%98%B8%EC%82%AC" target="_blank" rel="noopener"><span><b>잡코리아 · 남자 요양보호사</b><small>지역 필터로 강동·광진 선택</small></span><span class="go">↗</span></a></li>
-      </ul>
-
-<!-- JOBS-DATA: 매일 갱신되는 공고 데이터. status: open(채용중) | closed(마감) | none(공고 없음) -->
+<!-- JOBS-DATA: 매일 갱신되는 공고 데이터. status: open(채용중) | closed(마감) | check(확인 필요) | none(공고 없음) -->
 <script id="jobs-data" type="application/json">
 {
   "checked": "2026-11-08",
-  "dasarang": [
-    {"title":"다사랑방문요양센타 · 중랑구 상봉동","detail":"1등급 여자어르신 · 11:00~14:00 주6일 · 시급 10,320원(주휴·연차 포함 13,000원) · 정규직","note":"여성 어르신 대상 — 남성 배치 가능 여부를 전화로 문의","status":"open","url":"https://zighang.com/recruitment/5ec45390-3c14-4ffc-9dd3-d4775690241e"}
-  ],
-  "male": [],
-  "watch": [
-    {"name":"구리시립노인전문요양원","area":"구리","kind":"공립 요양시설","status":"none","url":"https://www.incruit.com/company/27488647/"},
-    {"name":"구리시 노인복지관","area":"구리","kind":"노인문화·교육","status":"none","url":"https://www.guri.go.kr/senior/main.do"},
-    {"name":"시립강동실버케어센터","area":"강동","kind":"시립 요양시설","status":"none","url":"http://www.gangdongcare.com/"},
-    {"name":"더클래식500","area":"광진 자양동","kind":"실버타운","status":"open","note":"경영지원·구매(마감 11/16경) · 객실 프런트·식음(마감 11/22경) — 경영지원은 IT 경력 활용 가능","url":"https://www.jobkorea.co.kr/recruit/co_read/recruit/c/hrunit"}
-  ]
+  "care": {
+    "dasarang": [
+      {"title":"다사랑방문요양센타 · 중랑구 상봉동","detail":"1등급 여자어르신 · 11:00~14:00 주6일 · 시급 10,320원(주휴·연차 포함 13,000원) · 정규직","note":"여성 어르신 대상 — 남성 배치 가능 여부를 전화로 문의","status":"open","url":"https://zighang.com/recruitment/5ec45390-3c14-4ffc-9dd3-d4775690241e"}
+    ],
+    "posts": [],
+    "watch": [
+      {"name":"구리시청 모집공고","area":"구리","kind":"시청 기간제·공공일자리","status":"check","url":"https://www.guri.go.kr/www/selectBbsNttList.do?bbsNo=41&key=389"},
+      {"name":"남양주시청 모집공고","area":"남양주","kind":"시청 기간제·공공일자리","status":"check","url":"https://www.nyj.go.kr/www/selectBbsNttList.do?key=2497&bbsNo=67"},
+      {"name":"구리시 노인일자리·사회활동","area":"구리","kind":"시 운영 노인일자리","status":"check","url":"https://www.guri.go.kr/www/contents.do?key=4889"},
+      {"name":"남양주시 노인일자리사업","area":"남양주","kind":"시 운영 노인일자리","status":"check","url":"https://www.nyj.go.kr/www/contents.do?key=2874"},
+      {"name":"구리시립노인전문요양원","area":"구리","kind":"시립 요양시설","status":"none","url":"https://www.incruit.com/company/27488647/"},
+      {"name":"남양주시노인복지관","area":"남양주","kind":"노인복지관","status":"none","url":"https://www.incruit.com/company/1677015709/"},
+      {"name":"시립강동실버케어센터","area":"강동","kind":"시립 실버케어","status":"none","url":"http://www.gangdongcare.com/"}
+    ]
+  },
+  "it": {
+    "posts": [
+      {"title":"지비아이티 · 예탁결제원 차세대 증권 개발","detail":"Java · Pro-C · SQL · 경력 5년+ · 프리랜서 · 여의도 · 마감 11/14","note":"금융 차세대 + 여의도 근무 — 조건이 잘 맞음","status":"open","url":"https://www.jobkorea.co.kr/Recruit/GI_Read/50179017"},
+      {"title":"이랜서 · 저축은행 차세대 개발 (여신연체관리)","detail":"Java · 중급 이상 · 9개월 · 분당 서현역","note":"차세대 계정계 — 연체관리는 배치 비중이 큰 업무","status":"check","url":"https://www.elancer.co.kr/project_detail/1069288"},
+      {"title":"이랜서 · 저축은행 차세대 개발 (여신심사)","detail":"Java · 중급 이상 · 8개월 · 분당 서현역","note":"같은 차세대 프로젝트의 다른 업무","status":"check","url":"https://www.elancer.co.kr/project_detail/1069289"}
+    ]
+  }
 }
 </script>
-    </section>
-  </div>
-</div>
+</section>
 
 <footer>
   <section>
@@ -478,14 +519,20 @@ textarea{width:100%;min-height:120px;resize:vertical;padding:10px;border:1px sol
   try{
     const J=JSON.parse(document.getElementById('jobs-data').textContent);
     const esc=x=>String(x==null?'':x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-    const st=s=>s==='open'?'<span class="st open">채용중</span>':s==='closed'?'<span class="st closed">마감</span>':'';
+    const LBL={open:'채용중',closed:'마감',check:'확인 필요',none:'공고 없음'};
+    const st=s=>'<span class="st '+(s==='open'?'open':s==='check'?'check':'closed')+'">'+(LBL[s]||'')+'</span>';
     const post=p=>'<div class="post"><b>'+esc(p.title)+'</b>'+st(p.status)+'<div class="meta">'+esc(p.detail)+'</div>'+(p.note?'<div class="fit">'+esc(p.note)+'</div>':'')+(p.url?'<a class="more" href="'+esc(p.url)+'" target="_blank" rel="noopener">공고 보기 ↗</a>':'')+'</div>';
+    const list=(id,arr,empty)=>{document.getElementById(id).innerHTML=arr&&arr.length?arr.map(post).join(''):'<div class="empty-job">'+empty+'</div>';};
     const p2=J.checked.split('-');document.getElementById('jobsChecked').textContent=(+p2[1])+'/'+(+p2[2])+' 확인';
-    const da=document.getElementById('dasarang');da.innerHTML=J.dasarang.length?J.dasarang.map(post).join(''):'<div class="empty-job">현재 게시된 다사랑 공고가 없습니다.</div>';
-    const mj=document.getElementById('maleJobs');mj.innerHTML=J.male.length?J.male.map(post).join(''):'<div class="empty-job">오늘 확인된 남성 조건 공고가 없습니다. 새 공고가 생기면 위에 빨간 알림으로 표시됩니다.</div>';
-    document.getElementById('watch').innerHTML=J.watch.map(w=>'<li class="'+(w.status==='open'?'open':'')+'"><a href="'+esc(w.url)+'" target="_blank" rel="noopener"><span class="dot"></span><span class="w-main"><b>'+esc(w.name)+'</b><small>'+esc(w.area)+' · '+esc(w.kind)+(w.note?' · '+esc(w.note):'')+'</small></span>'+(w.status==='open'?'<span class="st open">채용중</span>':'<span class="st closed">공고 없음</span>')+'</a></li>').join('');
-    const n=J.male.filter(x=>x.status==='open').length+J.dasarang.filter(x=>x.status==='open').length+J.watch.filter(x=>x.status==='open').length;
-    if(n){const a=document.getElementById('jobAlert');a.innerHTML='<span class="dot"></span>지금 확인할 채용 '+n+'건이 있습니다';a.hidden=false;}
+    const C=J.care||{},I=J.it||{};
+    list('dasarang',C.dasarang,'현재 게시된 다사랑 공고가 없습니다.');
+    list('carePosts',C.posts,'오늘 확인된 남성 조건 공고가 없습니다. 새 공고가 생기면 빨간 알림으로 표시됩니다.');
+    list('itPosts',I.posts,'오늘 확인된 조건 맞는 IT 공고가 없습니다.');
+    document.getElementById('careWatch').innerHTML=(C.watch||[]).map(w=>'<li class="'+(w.status==='open'?'open':'')+'"><a href="'+esc(w.url)+'" target="_blank" rel="noopener"><span class="dot"></span><span class="w-main"><b>'+esc(w.name)+'</b><small>'+esc(w.area)+' · '+esc(w.kind)+(w.note?' · '+esc(w.note):'')+'</small></span>'+st(w.status)+'</a></li>').join('');
+    const open=a=>(a||[]).filter(x=>x.status==='open').length;
+    const alertOn=(id,n,t)=>{if(!n)return;const a=document.getElementById(id);a.innerHTML='<span class="dot"></span>'+t+' '+n+'건';a.hidden=false;};
+    alertOn('careAlert',open(C.posts)+open(C.dasarang)+open(C.watch),'지금 확인할 요양 채용');
+    alertOn('itAlert',open(I.posts),'지금 지원 가능한 IT 공고');
   }catch(e){}
 
   // Memo
