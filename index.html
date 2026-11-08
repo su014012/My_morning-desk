@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>나의 아침 데스크</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@700&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: 신문 1면처럼 3단 그리드(35/40/25) — 머리기사(브리핑)를 가운데, 좌측 일정, 우측 생활정보 */
+:root{
+  --bg:#eef0f3; --paper:#fbfbfc; --ink:#1b2333; --muted:#5d6678; --line:#d6dae2;
+  --accent:#23407a; --accent-soft:#e3e9f5;
+  --up:#c8322b; --down:#2556b8; --warn:#b26a00;
+  --f-display:"Gowun Batang","Nanum Myeongjo",serif;
+  --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --f-data:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#12161e; --paper:#1a1f2a; --ink:#e6e9ef; --muted:#9aa3b5; --line:#2c3443;
+  --accent:#8fb0ee; --accent-soft:#223152; --up:#ff6b61; --down:#6f9bff; --warn:#f0a83a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#12161e; --paper:#1a1f2a; --ink:#e6e9ef; --muted:#9aa3b5; --line:#2c3443;
+  --accent:#8fb0ee; --accent-soft:#223152; --up:#ff6b61; --down:#6f9bff; --warn:#f0a83a; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.6 var(--f-body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 28px}
+.wrap{max-width:1360px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+a{color:var(--accent)}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num{font-family:var(--f-data);font-variant-numeric:tabular-nums}
+
+/* Header */
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;border-bottom:3px double var(--ink);padding-bottom:12px}
+.brand h1{font:700 clamp(26px,3.4vw,38px)/1.1 var(--f-display);margin:0;letter-spacing:-.01em}
+.brand p{margin:4px 0 0;color:var(--muted);font-size:13px}
+.hdr-right{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.clock{text-align:right;font-size:13px;color:var(--muted)}
+.clock strong{display:block;font:500 22px var(--f-data);color:var(--ink);font-variant-numeric:tabular-nums}
+.btn{display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:var(--paper);border:0;border-radius:6px;padding:9px 14px;font:600 14px var(--f-body);text-decoration:none;cursor:pointer}
+.btn:hover{filter:brightness(1.1)}
+.btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+
+/* Grid */
+.grid{display:grid;grid-template-columns:35fr 40fr 25fr;gap:16px;align-items:start}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+@media (max-width:1080px){.grid{grid-template-columns:1fr 1fr}.col.mid{grid-column:1 / -1;order:-1}}
+@media (max-width:700px){.grid{grid-template-columns:1fr}}
+section{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:16px 18px;min-width:0}
+h2{font:700 18px/1.3 var(--f-display);margin:0 0 12px;display:flex;justify-content:space-between;align-items:baseline;gap:8px;text-wrap:balance}
+h2 small{font:500 11px var(--f-body);color:var(--muted);letter-spacing:.04em}
+h3{font:600 14px/1.4 var(--f-body);margin:0}
+.src{font-size:12px;color:var(--muted)}
+
+/* Calendar */
+.planner-card{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--accent-soft);border-radius:6px;padding:12px 14px;margin-bottom:12px}
+.planner-card p{margin:0;font-size:13px;color:var(--muted)}
+.cal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.cal-head b{font-size:14px}
+.cal-head button{background:none;border:1px solid var(--line);color:var(--ink);border-radius:4px;width:28px;height:28px;cursor:pointer}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;font-size:12px}
+.cal .dow{color:var(--muted);padding:4px 0;font-weight:600}
+.cal .dow.sun,.cal .d.sun{color:var(--up)} .cal .dow.sat,.cal .d.sat{color:var(--down)}
+.cal .d{padding:6px 0;border-radius:4px;font-family:var(--f-data)}
+.cal .d.other{opacity:.35}
+.cal .d.today{background:var(--accent);color:var(--paper)!important;font-weight:600}
+.cal-links{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.cal .d{cursor:pointer;position:relative;border:1px solid transparent;background:none;color:inherit;font:inherit;font-family:var(--f-data)}
+.cal .d:hover{border-color:var(--line)}
+.cal .d.sel{border-color:var(--accent);font-weight:600}
+.cal .d.has::after{content:"";position:absolute;left:50%;bottom:2px;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:var(--up)}
+.cal .d.today.has::after{background:var(--paper)}
+.day-panel{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:6px;background:var(--bg)}
+.day-panel h3{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.day-panel h3 a{font-size:12px;font-weight:500}
+.day-panel .todo-form{margin:8px 0 0}
+.day-panel .todo-form input{background:var(--paper)}
+
+/* Pinned job */
+.pin{border:2px solid var(--accent);border-radius:8px;padding:12px;margin-bottom:12px;background:var(--accent-soft)}
+.pin .pin-h{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.pin .pin-h b{font-size:15px}
+.badge{font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px;background:var(--accent);color:var(--paper);white-space:nowrap}
+.post{padding:8px 0;border-top:1px dashed var(--line);font-size:13px}
+.post:first-of-type{border-top:0}
+.post b{font-size:13px}
+.post .meta{color:var(--muted);font-size:12px}
+.post .fit{margin-top:2px}
+.st{font-size:11px;font-weight:600;padding:0 6px;border-radius:999px;margin-left:4px}
+.st.open{background:color-mix(in srgb,var(--up) 14%,transparent);color:var(--up)}
+.st.closed{background:color-mix(in srgb,var(--muted) 18%,transparent);color:var(--muted)}
+.me{font-size:12px;padding:8px 10px;border-radius:6px;background:var(--bg);margin-bottom:10px}
+.me b{color:var(--accent)}
+.subh{font:600 12px var(--f-body);color:var(--muted);letter-spacing:.04em;margin:14px 0 6px}
+
+/* Todo */
+.todo-form{display:flex;gap:6px;margin-bottom:8px}
+.todo-form input{flex:1;min-width:0;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:14px var(--f-body)}
+.todo{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.todo li{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px dashed var(--line)}
+.todo li span{flex:1;min-width:0;overflow-wrap:anywhere}
+.todo li.done span{text-decoration:line-through;color:var(--muted)}
+.todo li button{background:none;border:0;color:var(--muted);cursor:pointer;font-size:16px;line-height:1}
+.todo input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent)}
+.empty{color:var(--muted);font-size:13px;padding:6px 0}
+
+/* Briefing */
+.brief{display:flex;flex-direction:column}
+.item{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;padding:12px 0;border-top:1px solid var(--line)}
+.item:first-child{border-top:0;padding-top:0}
+.item .no{font:500 13px var(--f-data);color:var(--muted);padding-top:2px}
+.item p{margin:4px 0 0;font-size:14px;color:var(--ink)}
+.item ul{margin:6px 0 0;padding-left:18px;font-size:14px}
+.item li{margin:2px 0}
+.tag{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px;margin-left:6px;vertical-align:2px}
+.tag.down{background:color-mix(in srgb,var(--down) 15%,transparent);color:var(--down)}
+.tag.up{background:color-mix(in srgb,var(--up) 15%,transparent);color:var(--up)}
+.tag.warn{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+.stats{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:6px}
+.stat{display:flex;flex-direction:column}
+.stat .k{font-size:11px;color:var(--muted)}
+.stat .v{font:500 17px var(--f-data);font-variant-numeric:tabular-nums}
+.v.up{color:var(--up)} .v.down{color:var(--down)}
+.more{font-size:12px;margin-top:6px;display:inline-block}
+
+/* Weather */
+.wx{display:flex;align-items:center;gap:14px}
+.wx .big{font:500 40px/1 var(--f-data)}
+.wx-note{font-size:13px;margin:10px 0 0;padding:8px 10px;background:var(--accent-soft);border-radius:6px}
+.wx-rows{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px;margin-top:10px}
+.wx-rows dt{color:var(--muted)} .wx-rows dd{margin:0}
+
+/* Jobs */
+.jobs{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.jobs a{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;border:1px solid var(--line);border-radius:6px;text-decoration:none;color:var(--ink)}
+.jobs a:hover{border-color:var(--accent);background:var(--accent-soft)}
+.jobs a b{font-size:14px} .jobs a small{display:block;color:var(--muted);font-size:12px}
+.jobs a .go{font-size:12px;font-weight:600;color:var(--accent);white-space:nowrap}
+.tips{font-size:12px;color:var(--muted);margin:10px 0 0;padding-left:16px}
+
+.alert{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:6px;margin-bottom:10px;font-weight:600;font-size:14px;background:color-mix(in srgb,var(--up) 14%,transparent);color:var(--up);border:1px solid var(--up)}
+.alert .dot,.watch .dot{width:8px;height:8px;border-radius:50%;background:var(--up);flex:none}
+@media (prefers-reduced-motion:no-preference){.alert .dot,.watch li.open .dot{animation:blink 1.4s ease-in-out infinite}}
+@keyframes blink{50%{opacity:.25}}
+.watch{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.watch a{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;text-decoration:none;color:var(--ink);font-size:13px}
+.watch li.open a{border-color:var(--up);background:color-mix(in srgb,var(--up) 8%,transparent)}
+.watch .dot{background:var(--line)}
+.watch li.open .dot{background:var(--up)}
+.watch .w-main{flex:1;min-width:0}
+.watch small{display:block;color:var(--muted);font-size:12px}
+.empty-job{font-size:13px;color:var(--muted);padding:8px 10px;border:1px dashed var(--line);border-radius:6px}
+/* Footer */
+footer{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
+@media (max-width:800px){footer{grid-template-columns:1fr}}
+.links{display:flex;flex-wrap:wrap;gap:8px}
+.links a{padding:7px 12px;border:1px solid var(--line);border-radius:999px;text-decoration:none;color:var(--ink);font-size:13px;background:var(--bg)}
+.links a:hover{border-color:var(--accent);color:var(--accent)}
+textarea{width:100%;min-height:120px;resize:vertical;padding:10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:14px/1.6 var(--f-body)}
+.memo-meta{font-size:12px;color:var(--muted);margin-top:4px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header>
+  <div class="brand">
+    <h1>나의 아침 데스크</h1>
+    <p>브리핑 기준 <b class="num">2026-11-08(일) 15:00 KST</b> · 일정·메모는 이 브라우저에 저장됩니다</p>
+  </div>
+  <div class="hdr-right">
+    <a class="btn" href="https://my-planner-pink-alpha.vercel.app/" target="_blank" rel="noopener">📒 내 일정관리 열기</a>
+    <div class="clock"><span id="today">-</span><strong id="now">--:--:--</strong></div>
+  </div>
+</header>
+
+<div class="grid">
+  <!-- 왼쪽 단 -->
+  <div class="col left">
+    <section>
+      <h2>📅 일정 · 캘린더 <small>WEEK / MONTH</small></h2>
+      <div class="planner-card">
+        <div><h3>내 일정관리 (my-planner)</h3><p>Claude와 만든 개인 플래너</p></div>
+        <a class="btn" href="https://my-planner-pink-alpha.vercel.app/" target="_blank" rel="noopener">열기 ↗</a>
+      </div>
+      <div class="cal-head">
+        <button id="prevM" type="button" aria-label="이전 달">‹</button>
+        <b id="calTitle"></b>
+        <button id="nextM" type="button" aria-label="다음 달">›</button>
+      </div>
+      <div class="cal" id="cal"></div>
+      <div class="day-panel" id="dayPanel">
+        <h3><span id="dayTitle"></span><a href="https://my-planner-pink-alpha.vercel.app/" target="_blank" rel="noopener">플래너에서 보기 ↗</a></h3>
+        <ul class="todo" id="dayList"></ul>
+        <form class="todo-form" id="dayForm">
+          <input id="dayInput" type="text" placeholder="이 날짜에 일정 추가 (예: 14:00 면접)" autocomplete="off">
+          <button class="btn" type="submit">추가</button>
+        </form>
+      </div>
+      <div class="cal-links">
+        <a class="btn ghost" href="https://calendar.google.com/calendar/r/week" target="_blank" rel="noopener">구글 캘린더 주간</a>
+        <a class="btn ghost" href="https://calendar.google.com/calendar/r/month" target="_blank" rel="noopener">월간</a>
+      </div>
+    </section>
+
+    <section>
+      <h2>✅ 오늘 해야 할 일 <small id="todoCount"></small></h2>
+      <form class="todo-form" id="todoForm">
+        <input id="todoInput" type="text" placeholder="할 일을 입력하고 Enter" autocomplete="off">
+        <button class="btn" type="submit">추가</button>
+      </form>
+      <ul class="todo" id="todoList"></ul>
+    </section>
+
+    <section>
+      <h2>💡 맞춤형 인사이트</h2>
+      <div class="brief">
+        <div class="item"><span class="no">5</span><div>
+          <h3>지금 시장에서 볼 체크포인트 <span class="tag warn">변동성 확대</span></h3>
+          <ul>
+            <li>신용융자 잔고 28.77조원 — 반대매매 연쇄 여부가 단기 바닥의 신호</li>
+            <li>11/9부터 3개월간 신용 담보비율 140% 유지 의무 면제(반대매매 완화)</li>
+            <li>환율 1,356.6원 상승 — 외국인 매도 지속 여부와 함께 확인</li>
+            <li>이번 주 일정: 11/10 미 CPI · 11/18 엔비디아 실적 · 11/26 한은 금리결정</li>
+          </ul>
+          <p class="src">투자 권유가 아닌 일정·지표 정리입니다.</p>
+        </div></div>
+        <div class="item"><span class="no">6</span><div>
+          <h3>핫한 IT의 변화</h3>
+          <ul>
+            <li>Anthropic 상장 기대 기업가치가 약 2조 달러 → 1~1.3조 달러로 낮아졌다는 보도</li>
+            <li>마이크로소프트가 오라클과의 AI 클라우드 임대 계약을 연장하지 않았다는 보도</li>
+            <li>11/10 코어위브 3분기 실적 — AI 인프라 수요의 바로미터</li>
+          </ul>
+        </div></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 가운데 단 -->
+  <div class="col mid">
+    <section>
+      <h2>🔥 실시간 핵심 브리핑 <small>11/8 기준</small></h2>
+      <div class="brief">
+        <div class="item"><span class="no">1</span><div>
+          <h3>세계 이슈 — 미 중간선거 민주당 압승</h3>
+          <p>민주당이 상·하원을 모두 가져가면서 AI 데이터센터·첨단 AI 개발 규제 강화 전망이 커졌습니다. 다만 대통령 거부권 때문에 연방 AI 법안 통과는 쉽지 않다는 분석도 함께 나옵니다. 강한 미국 고용지표로 12월 연준 금리 인상 확률이 약 80%로 올랐고, 미 10년물 금리는 4.858%까지 상승했습니다.</p>
+        </div></div>
+
+        <div class="item"><span class="no">2</span><div>
+          <h3>코인 시장 <span class="tag down">약세</span></h3>
+          <div class="stats">
+            <div class="stat"><span class="k">BTC (원)</span><span class="v num">1억 352만</span></div>
+            <div class="stat"><span class="k">BTC (달러)</span><span class="v num">≈ $75,700</span></div>
+            <div class="stat"><span class="k">ETH (원)</span><span class="v num">306.2만</span></div>
+            <div class="stat"><span class="k">고점 대비</span><span class="v num down">−40%</span></div>
+          </div>
+          <p>미국 현물 비트코인 ETF에서 한 주간 약 12.8억 달러가 빠져 연간 누적 순유입이 마이너스로 돌아섰습니다. 지지선 $75,590 이탈 여부가 관건입니다.</p>
+          <a class="more" href="https://upbit.com/exchange?code=CRIX.UPBIT.KRW-BTC" target="_blank" rel="noopener">업비트 실시간 시세 ↗</a>
+        </div></div>
+
+        <div class="item"><span class="no">3</span><div>
+          <h3>전일 코스피 (11/6 금) <span class="tag down">서킷브레이커</span></h3>
+          <div class="stats">
+            <div class="stat"><span class="k">KOSPI</span><span class="v num">5,059.69</span></div>
+            <div class="stat"><span class="k">등락</span><span class="v num down">▼324.11 (−6.02%)</span></div>
+            <div class="stat"><span class="k">KOSDAQ</span><span class="v num down">644.27 (−5.03%)</span></div>
+            <div class="stat"><span class="k">주간</span><span class="v num down">−11.71%</span></div>
+          </div>
+          <p>장 초반 8% 넘게 빠지며 9시 3분 1단계 서킷브레이커가 발동됐고 장중 4,911까지 밀렸습니다. 외국인은 이틀간 약 6.16조원을 순매도했고, 삼성전자 −6.35%, SK하이닉스 −10.44%였습니다. 전날 미 필라델피아 반도체지수가 12.25% 급락한 충격이 컸습니다.</p>
+          <a class="more" href="https://finance.naver.com/sise/sise_index.naver?code=KOSPI" target="_blank" rel="noopener">네이버 증권 코스피 ↗</a>
+        </div></div>
+
+        <div class="item"><span class="no">4</span><div>
+          <h3>국내 부동산 (11월 첫째 주, 부동산원)</h3>
+          <div class="stats">
+            <div class="stat"><span class="k">서울 매매</span><span class="v num up">+0.07%</span></div>
+            <div class="stat"><span class="k">강남구</span><span class="v num down">−0.39%</span></div>
+            <div class="stat"><span class="k">서초구</span><span class="v num down">−0.37%</span></div>
+            <div class="stat"><span class="k">서울 전세</span><span class="v num up">+0.17%</span></div>
+          </div>
+          <p>서울은 91주 연속 상승했지만 오름폭은 3주째 줄었습니다. 서초는 13주, 송파는 9주째 하락했고, 송파 전셋값은 8개월 만에 하락 전환했습니다. 반면 성북·노원 등 외곽 전세는 강세입니다.</p>
+          <a class="more" href="https://www.reb.or.kr/r-one/" target="_blank" rel="noopener">부동산원 통계(R-ONE) ↗</a>
+        </div></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>🚀 기술 & 트렌드 <small>AI 규제 · 반도체</small></h2>
+      <div class="brief">
+        <div class="item"><span class="no">·</span><div>
+          <h3>AI 규제</h3>
+          <p>미국 신규 당선자 상당수가 데이터센터 건설 억제와 대형 모델 출시 전 독립 안전성 검증을 공약했습니다. 각 지역 데이터센터 제한 주민투표 다수가 가결됐습니다. 국내는 올해 1월부터 AI 기본법이 시행 중입니다.</p>
+        </div></div>
+        <div class="item"><span class="no">·</span><div>
+          <h3>반도체</h3>
+          <p>증권가는 이번 급락을 메모리 수요 둔화보다 미국 정책 불확실성과 수급 충격으로 봅니다. 11/6 미국장에서는 엔비디아 +2.78%, 마이크론 +5.12%로 일부 반등했습니다. 11/18 엔비디아 실적이 다음 분기점입니다.</p>
+        </div></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- 오른쪽 단 -->
+  <div class="col right">
+    <section>
+      <h2>🌤️ 오늘의 날씨 <small>서울</small></h2>
+      <div class="wx"><span class="big">❄️</span><div><h3>오늘 첫눈 관측</h3><span class="src">오전 10시경 · 쌓이지 않음</span></div></div>
+      <dl class="wx-rows">
+        <dt>내일(월)</dt><dd><span class="num">4° / 12°</span> 쌀쌀</dd>
+        <dt>강수</dt><dd>중부 오후부터 갬, 비는 남부·제주 위주</dd>
+      </dl>
+      <p class="wx-note">첫눈이 평년보다 12일 빨랐습니다. 아침 외출 시 겉옷을 챙기세요.</p>
+      <div class="cal-links">
+        <a class="btn ghost" href="https://www.weather.go.kr/w/weather/forecast/short-term.do" target="_blank" rel="noopener">기상청 실시간 ↗</a>
+      </div>
+    </section>
+
+    <section>
+      <h2>🥇 금 시세 <small>11/7 기준</small></h2>
+      <div class="stats">
+        <div class="stat"><span class="k">순금 1돈 살 때</span><span class="v num up">784,000원</span></div>
+        <div class="stat"><span class="k">순금 1돈 팔 때</span><span class="v num up">662,000원</span></div>
+        <div class="stat"><span class="k">18K 팔 때</span><span class="v num">486,600원</span></div>
+        <div class="stat"><span class="k">국제 (온스)</span><span class="v num down">$4,069.63</span></div>
+      </div>
+      <p class="src" style="margin:8px 0 0">국내는 전일 대비 +0.89% 올랐고, 국제 금값은 강한 미국 고용지표로 달러·금리가 오르며 약세입니다. 1돈 = 3.75g, 한국금거래소 기준.</p>
+      <div class="cal-links">
+        <a class="btn ghost" href="https://finance.naver.com/marketindex/goldDetail.naver" target="_blank" rel="noopener">네이버 금 시세 ↗</a>
+      </div>
+    </section>
+
+    <section>
+      <h2>💼 남성 요양보호사 공고 <small id="jobsChecked"></small></h2>
+      <div class="me">조건: <b>남성</b> · 구리·갈매·남양주·강동·광진·중랑 · 내 자격: 요양보호사 · 운전면허 · IT 약 25년 · 며칠 상주 가능</div>
+
+      <div class="alert" id="jobAlert" hidden></div>
+
+      <div class="pin">
+        <div class="pin-h"><b>📌 다사랑 방문요양센터</b><span class="badge">필수</span></div>
+        <div id="dasarang"></div>
+        <a class="btn" style="margin-top:8px" href="https://senior.saramin.co.kr/recruitment?keyword=%EB%8B%A4%EC%82%AC%EB%9E%91" target="_blank" rel="noopener">‘다사랑’ 공고 검색 ↗</a>
+      </div>
+
+      <div class="subh">남성 조건 공고 (지역 내)</div>
+      <div id="maleJobs"></div>
+
+      <div class="subh">관심 기관 · 실버타운 채용 감시</div>
+      <ul class="watch" id="watch"></ul>
+
+      <div class="subh">남성·지역 바로 검색</div>
+      <ul class="jobs">
+        <li><a href="https://www.yoyangnara.com/bbs/search.php?sfl=wr_subject&sop=and&stx=%EB%82%A8%EC%9E%90" target="_blank" rel="noopener"><span><b>요양나라 · ‘남자’ 공고</b><small>요양보호사 전문 구인 게시판</small></span><span class="go">↗</span></a></li>
+        <li><a href="https://www.carepartner.kr/jobs?city=%EA%B5%AC%EB%A6%AC" target="_blank" rel="noopener"><span><b>케어파트너 · 구리</b><small>남자어르신 공고 확인</small></span><span class="go">↗</span></a></li>
+        <li><a href="https://www.carepartner.kr/jobs?city=%EB%82%A8%EC%96%91%EC%A3%BC" target="_blank" rel="noopener"><span><b>케어파트너 · 남양주</b><small>갈매·별내·다산 포함</small></span><span class="go">↗</span></a></li>
+        <li><a href="https://www.jobkorea.co.kr/Search/?stext=%EB%82%A8%EC%9E%90+%EC%9A%94%EC%96%91%EB%B3%B4%ED%98%B8%EC%82%AC" target="_blank" rel="noopener"><span><b>잡코리아 · 남자 요양보호사</b><small>지역 필터로 강동·광진 선택</small></span><span class="go">↗</span></a></li>
+      </ul>
+
+<!-- JOBS-DATA: 매일 갱신되는 공고 데이터. status: open(채용중) | closed(마감) | none(공고 없음) -->
+<script id="jobs-data" type="application/json">
+{
+  "checked": "2026-11-08",
+  "dasarang": [
+    {"title":"다사랑방문요양센타 · 중랑구 상봉동","detail":"1등급 여자어르신 · 11:00~14:00 주6일 · 시급 10,320원(주휴·연차 포함 13,000원) · 정규직","note":"여성 어르신 대상 — 남성 배치 가능 여부를 전화로 문의","status":"open","url":"https://zighang.com/recruitment/5ec45390-3c14-4ffc-9dd3-d4775690241e"}
+  ],
+  "male": [],
+  "watch": [
+    {"name":"구리시립노인전문요양원","area":"구리","kind":"공립 요양시설","status":"none","url":"https://www.incruit.com/company/27488647/"},
+    {"name":"구리시 노인복지관","area":"구리","kind":"노인문화·교육","status":"none","url":"https://www.guri.go.kr/senior/main.do"},
+    {"name":"시립강동실버케어센터","area":"강동","kind":"시립 요양시설","status":"none","url":"http://www.gangdongcare.com/"},
+    {"name":"더클래식500","area":"광진 자양동","kind":"실버타운","status":"open","note":"정비원 ~210만원 · 사업장 소장 (IT·시설 경력 활용)","url":"https://www.jobkorea.co.kr/Search/?stext=%EB%8D%94%ED%81%B4%EB%9E%98%EC%8B%9D500"}
+  ]
+}
+</script>
+    </section>
+  </div>
+</div>
+
+<footer>
+  <section>
+    <h2>📰 뉴스 바로가기</h2>
+    <div class="links">
+      <a href="https://news.naver.com/" target="_blank" rel="noopener">네이버 뉴스</a>
+      <a href="https://news.daum.net/" target="_blank" rel="noopener">다음 뉴스</a>
+      <a href="https://www.yna.co.kr/" target="_blank" rel="noopener">연합뉴스</a>
+      <a href="https://www.hankyung.com/" target="_blank" rel="noopener">한국경제</a>
+      <a href="https://www.mk.co.kr/" target="_blank" rel="noopener">매일경제</a>
+      <a href="https://zdnet.co.kr/" target="_blank" rel="noopener">ZDNet Korea</a>
+      <a href="https://www.etnews.com/" target="_blank" rel="noopener">전자신문</a>
+      <a href="https://www.reuters.com/" target="_blank" rel="noopener">Reuters</a>
+      <a href="https://www.bloomberg.com/asia" target="_blank" rel="noopener">Bloomberg</a>
+      <a href="https://finance.naver.com/" target="_blank" rel="noopener">네이버 증권</a>
+      <a href="https://upbit.com/" target="_blank" rel="noopener">업비트</a>
+      <a href="https://my-planner-pink-alpha.vercel.app/" target="_blank" rel="noopener">📒 내 일정관리</a>
+    </div>
+  </section>
+  <section>
+    <h2>📝 메모장 <small id="memoState"></small></h2>
+    <textarea id="memo" placeholder="자유롭게 적어두세요. 자동 저장됩니다."></textarea>
+    <div class="memo-meta">이 브라우저에만 저장됩니다.</div>
+  </section>
+</footer>
+</div>
+
+<script>
+(function(){
+  const store={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},
+               set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+  const DOW=['일','월','화','수','목','금','토'];
+
+  // Clock
+  const nowEl=document.getElementById('now'),todayEl=document.getElementById('today');
+  function tick(){const d=new Date();
+    nowEl.textContent=d.toLocaleTimeString('ko-KR',{hour12:false,timeZone:'Asia/Seoul'});
+    todayEl.textContent=d.toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short',timeZone:'Asia/Seoul'});}
+  tick();setInterval(tick,1000);
+
+  // Month calendar
+  const t=new Date();let vy=t.getFullYear(),vm=t.getMonth();
+  const key=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  let sel=key(t);
+  let events=store.get('dash.events',{});
+  const cal=document.getElementById('cal'),title=document.getElementById('calTitle');
+  function render(){
+    title.textContent=vy+'년 '+(vm+1)+'월';
+    let h=DOW.map((w,i)=>'<div class="dow'+(i==0?' sun':i==6?' sat':'')+'">'+w+'</div>').join('');
+    const first=new Date(vy,vm,1),start=new Date(vy,vm,1-first.getDay());
+    for(let i=0;i<42;i++){const d=new Date(start);d.setDate(start.getDate()+i);
+      if(i>=35&&d.getMonth()!==vm)break;
+      const k=key(d),c=['d'];if(d.getMonth()!==vm)c.push('other');if(d.getDay()==0)c.push('sun');if(d.getDay()==6)c.push('sat');
+      if(k===key(t))c.push('today');if(k===sel)c.push('sel');if((events[k]||[]).length)c.push('has');
+      h+='<button type="button" class="'+c.join(' ')+'" data-k="'+k+'" aria-label="'+k+'">'+d.getDate()+'</button>';}
+    cal.innerHTML=h;}
+  cal.addEventListener('click',e=>{const b=e.target.closest('.d');if(!b)return;sel=b.dataset.k;
+    const p=sel.split('-');if(+p[1]-1!==vm){vy=+p[0];vm=+p[1]-1}render();drawDay();});
+  const dayList=document.getElementById('dayList'),dayTitle=document.getElementById('dayTitle');
+  function drawDay(){
+    const p=sel.split('-'),d=new Date(+p[0],+p[1]-1,+p[2]);
+    dayTitle.textContent=(+p[1])+'월 '+(+p[2])+'일 ('+DOW[d.getDay()]+')';
+    const arr=events[sel]||[];dayList.innerHTML='';
+    if(!arr.length){dayList.innerHTML='<li class="empty">등록된 일정이 없습니다.</li>';return;}
+    arr.forEach((x,i)=>{const li=document.createElement('li');const sp=document.createElement('span');sp.textContent=x;
+      const del=document.createElement('button');del.type='button';del.textContent='×';del.setAttribute('aria-label','일정 삭제');
+      del.onclick=()=>{arr.splice(i,1);if(!arr.length)delete events[sel];saveEv()};li.append(sp,del);dayList.append(li);});}
+  function saveEv(){store.set('dash.events',events);render();drawDay();}
+  document.getElementById('dayForm').addEventListener('submit',e=>{e.preventDefault();
+    const inp=document.getElementById('dayInput'),v=inp.value.trim();if(!v)return;
+    (events[sel]=events[sel]||[]).push(v);inp.value='';saveEv();});
+  document.getElementById('prevM').onclick=()=>{vm--;if(vm<0){vm=11;vy--}render()};
+  document.getElementById('nextM').onclick=()=>{vm++;if(vm>11){vm=0;vy++}render()};
+  render();drawDay();
+
+  // To-do
+  let todos=store.get('dash.todos',[]);
+  const list=document.getElementById('todoList'),cnt=document.getElementById('todoCount');
+  function draw(){
+    list.innerHTML='';
+    if(!todos.length){list.innerHTML='<li class="empty">할 일이 없습니다. 위에 입력해 추가하세요.</li>';}
+    todos.forEach((x,i)=>{const li=document.createElement('li');if(x.done)li.className='done';
+      const cb=document.createElement('input');cb.type='checkbox';cb.checked=x.done;cb.id='td'+i;
+      cb.onchange=()=>{x.done=cb.checked;save()};
+      const sp=document.createElement('span');sp.textContent=x.text;
+      const del=document.createElement('button');del.type='button';del.textContent='×';del.setAttribute('aria-label','삭제');
+      del.onclick=()=>{todos.splice(i,1);save()};
+      li.append(cb,sp,del);list.append(li);});
+    const left=todos.filter(x=>!x.done).length;cnt.textContent=todos.length?left+' / '+todos.length+' 남음':'';}
+  function save(){store.set('dash.todos',todos);draw()}
+  document.getElementById('todoForm').addEventListener('submit',e=>{e.preventDefault();
+    const inp=document.getElementById('todoInput');const v=inp.value.trim();if(!v)return;
+    todos.push({text:v,done:false});inp.value='';save();});
+  draw();
+
+
+  // Jobs (data block)
+  try{
+    const J=JSON.parse(document.getElementById('jobs-data').textContent);
+    const esc=x=>String(x==null?'':x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const st=s=>s==='open'?'<span class="st open">채용중</span>':s==='closed'?'<span class="st closed">마감</span>':'';
+    const post=p=>'<div class="post"><b>'+esc(p.title)+'</b>'+st(p.status)+'<div class="meta">'+esc(p.detail)+'</div>'+(p.note?'<div class="fit">'+esc(p.note)+'</div>':'')+(p.url?'<a class="more" href="'+esc(p.url)+'" target="_blank" rel="noopener">공고 보기 ↗</a>':'')+'</div>';
+    const p2=J.checked.split('-');document.getElementById('jobsChecked').textContent=(+p2[1])+'/'+(+p2[2])+' 확인';
+    const da=document.getElementById('dasarang');da.innerHTML=J.dasarang.length?J.dasarang.map(post).join(''):'<div class="empty-job">현재 게시된 다사랑 공고가 없습니다.</div>';
+    const mj=document.getElementById('maleJobs');mj.innerHTML=J.male.length?J.male.map(post).join(''):'<div class="empty-job">오늘 확인된 남성 조건 공고가 없습니다. 새 공고가 생기면 위에 빨간 알림으로 표시됩니다.</div>';
+    document.getElementById('watch').innerHTML=J.watch.map(w=>'<li class="'+(w.status==='open'?'open':'')+'"><a href="'+esc(w.url)+'" target="_blank" rel="noopener"><span class="dot"></span><span class="w-main"><b>'+esc(w.name)+'</b><small>'+esc(w.area)+' · '+esc(w.kind)+(w.note?' · '+esc(w.note):'')+'</small></span>'+(w.status==='open'?'<span class="st open">채용중</span>':'<span class="st closed">공고 없음</span>')+'</a></li>').join('');
+    const n=J.male.filter(x=>x.status==='open').length+J.dasarang.filter(x=>x.status==='open').length+J.watch.filter(x=>x.status==='open').length;
+    if(n){const a=document.getElementById('jobAlert');a.innerHTML='<span class="dot"></span>지금 확인할 채용 '+n+'건이 있습니다';a.hidden=false;}
+  }catch(e){}
+
+  // Memo
+  const memo=document.getElementById('memo'),ms=document.getElementById('memoState');
+  memo.value=store.get('dash.memo','');let tm;
+  memo.addEventListener('input',()=>{ms.textContent='저장 중…';clearTimeout(tm);
+    tm=setTimeout(()=>{store.set('dash.memo',memo.value);ms.textContent='저장됨'},500);});
+})();
+</script>
+</body>
+</html>
