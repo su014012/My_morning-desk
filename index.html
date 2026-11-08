@@ -164,6 +164,11 @@ h3{font:600 14px/1.4 var(--f-body);margin:0}
 .chips a{padding:5px 10px;border:1px solid var(--line);border-radius:999px;font-size:12px;text-decoration:none;color:var(--ink);background:var(--bg)}
 .chips a:hover{border-color:var(--accent);color:var(--accent)}
 .st.check{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+.live{display:inline-flex;align-items:center;gap:4px;font:600 11px var(--f-body);color:var(--up);margin-left:6px;vertical-align:2px}
+.live::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--up)}
+.wx-live{display:flex;align-items:center;gap:12px;padding-bottom:10px;margin-bottom:10px;border-bottom:1px dashed var(--line);flex-wrap:wrap}
+.wx-live .big{font:500 36px/1 var(--f-data)}
+.wx-live .live{margin-left:auto}
 /* Footer */
 footer{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
 @media (max-width:800px){footer{grid-template-columns:1fr}}
@@ -263,11 +268,11 @@ textarea{width:100%;min-height:120px;resize:vertical;padding:10px;border:1px sol
         </div></div>
 
         <div class="item"><span class="no">2</span><div>
-          <h3>코인 시장 <span class="tag down">약세</span></h3>
+          <h3>코인 시장 <span class="tag down">약세</span><span class="live" id="coinLive" hidden></span></h3>
           <div class="stats">
-            <div class="stat"><span class="k">BTC (원)</span><span class="v num">1억 352만</span></div>
+            <div class="stat"><span class="k">BTC (원)</span><span class="v num" id="liveBtc">1억 352만</span></div>
             <div class="stat"><span class="k">BTC (달러)</span><span class="v num">≈ $75,700</span></div>
-            <div class="stat"><span class="k">ETH (원)</span><span class="v num">306.2만</span></div>
+            <div class="stat"><span class="k">ETH (원)</span><span class="v num" id="liveEth">306.2만</span></div>
             <div class="stat"><span class="k">고점 대비</span><span class="v num down">−40%</span></div>
           </div>
           <p>미국 현물 비트코인 ETF에서 한 주간 약 12.8억 달러가 빠져 연간 누적 순유입이 마이너스로 돌아섰습니다. 지지선 $75,590 이탈 여부가 관건입니다.</p>
@@ -319,6 +324,7 @@ textarea{width:100%;min-height:120px;resize:vertical;padding:10px;border:1px sol
   <div class="col right">
     <section>
       <h2>🌤️ 오늘의 날씨 <small>서울</small></h2>
+      <div class="wx-live" id="wxLive" hidden><span class="big num" id="wxNow"></span><div><h3 id="wxDesc"></h3><span class="src" id="wxRange"></span></div><span class="live" id="wxStamp"></span></div>
       <div class="wx"><span class="big">❄️</span><div><h3>오늘 첫눈 관측</h3><span class="src">오전 10시경 · 쌓이지 않음</span></div></div>
       <dl class="wx-rows">
         <dt>내일(월)</dt><dd><span class="num">4° / 12°</span> 쌀쌀</dd>
@@ -534,6 +540,22 @@ textarea{width:100%;min-height:120px;resize:vertical;padding:10px;border:1px sol
     alertOn('careAlert',open(C.posts)+open(C.dasarang)+open(C.watch),'지금 확인할 요양 채용');
     alertOn('itAlert',open(I.posts),'지금 지원 가능한 IT 공고');
   }catch(e){}
+
+  // Live data (Vercel 서버 함수 /api/live 가 있을 때만 동작)
+  (async()=>{
+    let d;try{const r=await fetch('/api/live',{cache:'no-store'});if(!r.ok)return;d=await r.json();}catch(e){return;}
+    const hm=new Date(d.at||Date.now()).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Seoul'});
+    const won=v=>v>=1e8?(Math.floor(v/1e8)+'억 '+Math.round((v%1e8)/1e4).toLocaleString('ko-KR')+'만'):v>=1e4?((v/1e4).toFixed(1).replace(/\.0$/,'')+'만'):Math.round(v).toLocaleString('ko-KR');
+    const pct=r=>(r>0?'▲':r<0?'▼':'')+Math.abs(r*100).toFixed(2)+'%';
+    const setC=(id,c)=>{const el=document.getElementById(id);if(!el||!c)return;el.textContent=won(c.price)+' '+pct(c.rate);el.classList.remove('up','down');if(c.rate>0)el.classList.add('up');else if(c.rate<0)el.classList.add('down');};
+    if(d.coin){setC('liveBtc',d.coin.BTC);setC('liveEth',d.coin.ETH);const t=document.getElementById('coinLive');t.textContent='실시간 '+hm;t.hidden=false;}
+    if(d.weather){const w=d.weather;
+      document.getElementById('wxNow').textContent=Math.round(w.temp)+'°';
+      document.getElementById('wxDesc').textContent='지금 '+w.desc;
+      document.getElementById('wxRange').textContent='오늘 '+Math.round(w.min)+'° / '+Math.round(w.max)+'° · 강수확률 '+(w.pop==null?'-':w.pop+'%');
+      document.getElementById('wxStamp').textContent='실시간 '+hm;
+      document.getElementById('wxLive').hidden=false;}
+  })();
 
   // Memo
   const memo=document.getElementById('memo'),ms=document.getElementById('memoState');
