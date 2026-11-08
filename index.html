@@ -176,6 +176,11 @@ button.alert::after{content:"보기 ↓";margin-left:auto;font-size:12px;font-we
 .post a.ptitle:hover b{color:var(--accent);text-decoration:underline}
 .flash{animation:flash 1.6s ease-out}
 @keyframes flash{0%{background:color-mix(in srgb,var(--up) 22%,transparent)}100%{background:transparent}}
+a.alert{text-decoration:none}
+a.alert::after{content:none}
+a.post-link{display:block;color:var(--ink);text-decoration:none;border-radius:6px;padding-inline:6px;margin-inline:-6px}
+a.post-link:hover,a.post-link:active{background:var(--accent-soft)}
+a.post-link .more{color:var(--accent)}
 /* Footer */
 footer{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
 @media (max-width:800px){footer{grid-template-columns:1fr}}
@@ -600,7 +605,9 @@ textarea{width:100%;min-height:120px;resize:vertical;padding:10px;border:1px sol
     const esc=x=>String(x==null?'':x).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
     const LBL={open:'채용중',closed:'마감',check:'확인 필요',none:'공고 없음'};
     const st=s=>'<span class="st '+(s==='open'?'open':s==='check'?'check':'closed')+'">'+(LBL[s]||'')+'</span>';
-    const post=p=>'<div class="post'+(p.status==='open'?' is-open':'')+'">'+(p.url?'<a class="ptitle" href="'+esc(p.url)+'" target="_blank" rel="noopener"><b>'+esc(p.title)+'</b></a>':'<b>'+esc(p.title)+'</b>')+st(p.status)+'<div class="meta">'+esc(p.detail)+'</div>'+(p.note?'<div class="fit">'+esc(p.note)+'</div>':'')+(p.url?'<a class="more" href="'+esc(p.url)+'" target="_blank" rel="noopener">공고 보기 ↗</a>':'')+'</div>';
+    const post=p=>{const inner='<b>'+esc(p.title)+'</b>'+st(p.status)+'<div class="meta">'+esc(p.detail)+'</div>'+(p.note?'<div class="fit">'+esc(p.note)+'</div>':'')+(p.url?'<span class="more">공고 보기 ↗</span>':'');
+      const cls='post'+(p.status==='open'?' is-open':'');
+      return p.url?'<a class="'+cls+' post-link" href="'+esc(p.url)+'" target="_blank" rel="noopener">'+inner+'</a>':'<div class="'+cls+'">'+inner+'</div>';};
     const list=(id,arr,empty)=>{document.getElementById(id).innerHTML=arr&&arr.length?arr.map(post).join(''):'<div class="empty-job">'+empty+'</div>';};
     const p2=J.checked.split('-');document.getElementById('jobsChecked').textContent=(+p2[1])+'/'+(+p2[2])+' 확인';
     const C=J.care||{},I=J.it||{};
@@ -609,10 +616,11 @@ textarea{width:100%;min-height:120px;resize:vertical;padding:10px;border:1px sol
     list('itPosts',I.posts,'오늘 확인된 조건 맞는 IT 공고가 없습니다.');
     document.getElementById('careWatch').innerHTML=(C.watch||[]).map(w=>'<li class="'+(w.status==='open'?'open':'')+'"><a href="'+esc(w.url)+'" target="_blank" rel="noopener"><span class="dot"></span><span class="w-main"><b>'+esc(w.name)+'</b><small>'+esc(w.area)+' · '+esc(w.kind)+(w.note?' · '+esc(w.note):'')+'</small></span>'+st(w.status)+'</a></li>').join('');
     const open=a=>(a||[]).filter(x=>x.status==='open').length;
-    const alertOn=(id,n,t)=>{if(!n)return;const a=document.getElementById(id);a.innerHTML='<span class="dot"></span>'+t+' '+n+'건';a.hidden=false;
-      a.onclick=()=>{const lane=a.closest('.lane');const tg=lane&&lane.querySelector('.post.is-open, .watch li.open');if(!tg)return;tg.scrollIntoView({behavior:'smooth',block:'center'});tg.classList.remove('flash');void tg.offsetWidth;tg.classList.add('flash');};};
-    alertOn('careAlert',open(C.posts)+open(C.dasarang)+open(C.watch),'지금 확인할 요양 채용');
-    alertOn('itAlert',open(I.posts),'지금 지원 가능한 IT 공고');
+    const alertOn=(id,list,t)=>{const op=list.filter(x=>x&&x.status==='open'&&x.url);if(!op.length)return;const a=document.getElementById(id);
+      const lk=document.createElement('a');lk.className='alert';lk.href=op[0].url;lk.target='_blank';lk.rel='noopener';
+      lk.innerHTML='<span class="dot"></span>'+t+' '+op.length+'건 · 바로 보기 ↗';a.replaceWith(lk);lk.id=id;};
+    alertOn('careAlert',[].concat(C.dasarang||[],C.posts||[],C.watch||[]),'지금 확인할 요양 채용');
+    alertOn('itAlert',I.posts||[],'지금 지원 가능한 IT 공고');
   }catch(e){}
 
   // Live data (Vercel 서버 함수 /api/live 가 있을 때만 동작)
