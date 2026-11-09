@@ -314,13 +314,14 @@ textarea{width:100%;min-height:120px;resize:vertical;padding:10px;border:1px sol
         </div></div>
 
         <div class="item"><span class="no">3</span><div>
-          <h3>전일 코스피 (11/6 금) <span class="tag down">서킷브레이커</span></h3>
+          <h3>코스피 <span id="kospiWhen">(11/6 금)</span> <span class="tag down" id="kospiTag">서킷브레이커</span><span class="live" id="kospiLive" hidden></span></h3>
           <div class="stats">
-            <div class="stat"><span class="k">KOSPI</span><span class="v num">5,059.69</span></div>
-            <div class="stat"><span class="k">등락</span><span class="v num down">▼324.11 (−6.02%)</span></div>
-            <div class="stat"><span class="k">KOSDAQ</span><span class="v num down">644.27 (−5.03%)</span></div>
-            <div class="stat"><span class="k">주간</span><span class="v num down">−11.71%</span></div>
+            <div class="stat"><span class="k">KOSPI</span><span class="v num" id="kospiVal">5,059.69</span></div>
+            <div class="stat"><span class="k">등락</span><span class="v num down" id="kospiChg">▼324.11 (−6.02%)</span></div>
+            <div class="stat"><span class="k">KOSDAQ</span><span class="v num down" id="kosdaqVal">644.27 (−5.03%)</span></div>
+            <div class="stat"><span class="k" id="weekK">주간</span><span class="v num down">−11.71%</span></div>
           </div>
+          <p class="src" id="kospiNote" hidden>숫자는 실시간입니다. 아래 설명은 아침 브리핑 기준입니다.</p>
           <p>장 초반 8% 넘게 빠지며 1단계 서킷브레이커·사이드카가 발동됐고 장중 4,911까지 밀렸습니다. 지난주 외국인은 6거래일 연속, 약 11조원을 순매도했고 기관(약 4.8조원)과 개인(약 4.2조원)이 받아냈습니다. 삼성전자 −6.35%, SK하이닉스 −10.44%. 금요일 밤 미국장에서 필라델피아 반도체지수가 4.21% 반등해 오늘 개장 분위기에 관심이 쏠립니다.</p>
           <a class="more" href="https://finance.naver.com/sise/sise_index.naver?code=KOSPI" target="_blank" rel="noopener">네이버 증권 코스피 ↗</a>
         </div></div>
@@ -376,7 +377,7 @@ textarea{width:100%;min-height:120px;resize:vertical;padding:10px;border:1px sol
         <div class="stat"><span class="k">순금 1돈 살 때</span><span class="v num up">784,000원</span></div>
         <div class="stat"><span class="k">순금 1돈 팔 때</span><span class="v num up">662,000원</span></div>
         <div class="stat"><span class="k">18K 팔 때</span><span class="v num">486,600원</span></div>
-        <div class="stat"><span class="k">국제 (온스)</span><span class="v num down">$4,065.98</span></div>
+        <div class="stat"><span class="k" id="goldIntlK">국제 (온스)</span><span class="v num down" id="goldIntl">$4,065.98</span></div>
       </div>
       <p class="src" style="margin:8px 0 0">주말 고시 변동 없음. 국내 살 때 +7,000원(+0.89%), 팔 때 +4,000원(+0.60%). 국제 금값은 미 금리 인상 우려에 따른 달러·국채금리 강세로 온스당 4,000달러 초반에서 약세입니다. 1돈 = 3.75g, 한국금거래소 기준.</p>
       <div class="cal-links">
@@ -699,6 +700,30 @@ textarea{width:100%;min-height:120px;resize:vertical;padding:10px;border:1px sol
     const hm=new Date(d.at||Date.now()).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Seoul'});
     document.getElementById('tickStamp').textContent='실시간 '+hm;
     document.getElementById('liveBar').hidden=false;
+  })();
+
+  // 코스피 카드·금 카드 숫자도 실시간으로 교체
+  (async()=>{
+    let d;try{const r=await fetch('/api/live',{cache:'no-store'});if(!r.ok)return;d=await r.json();}catch(e){return;}
+    const m=d.market||{};const K=m.KOSPI,Q=m.KOSDAQ,G=m.GOLD;
+    const fmt=(v,dp)=>v.toLocaleString('en-US',{minimumFractionDigits:dp,maximumFractionDigits:dp});
+    const pc=r=>r==null?'':'('+(r>0?'+':r<0?'−':'')+Math.abs(r*100).toFixed(2)+'%)';
+    const color=(el,r)=>{el.classList.remove('up','down');if(r>0)el.classList.add('up');else if(r<0)el.classList.add('down');};
+    const DOWS=['일','월','화','수','목','금','토'];
+    const kst=t=>{const x=new Date(t);if(isNaN(x))return null;const k=new Date(x.toLocaleString('en-US',{timeZone:'Asia/Seoul'}));return (k.getMonth()+1)+'/'+k.getDate()+' '+DOWS[k.getDay()];};
+    if(K){
+      const day=kst(K.time||d.at);
+      document.getElementById('kospiWhen').textContent='('+(day||'오늘')+(K.open===true?' 장중':K.open===false?' 마감':'')+')';
+      document.getElementById('kospiTag').hidden=true;
+      const v=document.getElementById('kospiVal');v.textContent=fmt(K.price,2);
+      const c=document.getElementById('kospiChg');c.textContent=(K.change>0?'▲':K.change<0?'▼':'')+fmt(Math.abs(K.change||0),2)+' '+pc(K.rate);color(c,K.rate);
+      document.getElementById('weekK').textContent='지난주';
+      const hm=new Date(d.at||Date.now()).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Seoul'});
+      const lv=document.getElementById('kospiLive');lv.textContent='실시간 '+hm;lv.hidden=false;
+      document.getElementById('kospiNote').hidden=false;
+    }
+    if(Q){const q=document.getElementById('kosdaqVal');q.textContent=fmt(Q.price,2)+' '+pc(Q.rate);color(q,Q.rate);}
+    if(G){const g=document.getElementById('goldIntl');g.textContent='$'+fmt(G.price,2)+' '+pc(G.rate);color(g,G.rate);document.getElementById('goldIntlK').textContent='국제 (온스) · 실시간';}
   })();
 
   // Memo
