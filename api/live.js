@@ -1,6 +1,8 @@
 // 나의 아침 데스크 — 실시간 데이터 (Vercel 서버 함수)
-// GET /api/live → { at, coin: { BTC, ETH, BTC_USD }, weather }
-// 코인: 업비트 공개 시세 API / 날씨: Open-Meteo (서울, API 키 불필요)
+// GET /api/live → { at, coin: { BTC, ETH, BTC_USD }, weather, market: { KOSPI, KOSDAQ, USDKRW, GOLD, GOLD_DON } }
+// 코인: 업비트 공개 시세 API / 날씨: Open-Meteo (서울)
+// 지수: 네이버 증권(실패 시 야후 파이낸스) / 환율·국제 금: 야후 파이낸스 — 모두 API 키 불필요
+// 각 항목은 따로 가져오고, 하나가 실패해도 나머지는 그대로 보냅니다.
 
 const WMO = {
   0: '맑음', 1: '대체로 맑음', 2: '구름 조금', 3: '흐림',
@@ -13,11 +15,24 @@ const WMO = {
   95: '뇌우', 96: '뇌우(우박)', 99: '뇌우(우박)'
 };
 
-async function getJson(url) {
-  const r = await fetch(url, { headers: { accept: 'application/json' } });
-  if (!r.ok) throw new Error(url + ' ' + r.status);
-  return r.json();
+const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36';
+
+async function getJson(url, timeoutMs = 6000) {
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), timeoutMs);
+  try {
+    const r = await fetch(url, { headers: { accept: 'application/json', 'user-agent': UA }, signal: ctl.signal });
+    if (!r.ok) throw new Error(url + ' ' + r.status);
+    return await r.json();
+  } finally {
+    clearTimeout(timer);
+  }
 }
+
+const num = v => {
+  if (v == null) return NaN;
+  return typeof v === 'number' ? v : parseFloat(String(v).replace(/,/g, ''));
+};
 
 async function coin() {
   const rows = await getJson('https://api.upbit.com/v1/ticker?markets=KRW-BTC,KRW-ETH,USDT-BTC');
@@ -45,14 +60,71 @@ async function weather() {
   };
 }
 
+// 야후 파이낸스 차트 API: 현재가와 전일 종가로 등락 계산
+async function yahoo(symbol) {
+  const d = await getJson('https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(symbol) + '?range=1d&interval=5m');
+  const m = d.chart.result[0].meta;
+  const price = num(m.regularMarketPrice);
+  const prev = num(m.chartPreviousClose ?? m.previousClose);
+  if (!isFinite(price)) throw new Error(symbol + ' no price');
+  return {
+    price,
+    change: isFinite(prev) ? price - prev : null,
+    rate: isFinite(prev) && prev ? (price - prev) / prev : null,
+    time: m.regularMarketTime ? new Date(m.regularMarketTime * 1000).toISOString() : null,
+    src: 'yahoo'
+  };
+}
+
+// 네이버 증권 지수 (사용자가 비교하는 기준과 같음)
+async function naverIndex(code) {
+  const d = await getJson('https://m.stock.naver.com/api/index/' + code + '/basic');
+  const price = num(d.closePrice);
+  const change = num(d.compareToPreviousClosePrice);
+  const ratio = num(d.fluctuationsRatio);
+  if (!isFinite(price)) throw new Error(code + ' no price');
+  return {
+    price,
+    change: isFinite(change) ? change : null,
+    rate: isFinite(ratio) ? ratio / 100 : null,
+    open: d.marketStatus ? d.marketStatus === 'OPEN' : null,
+    time: d.localTradedAt || null,
+    src: 'naver'
+  };
+}
+
+const firstOk = async (...fns) => {
+  let err;
+  for (const f of fns) { try { return await f(); } catch (e) { err = e; } }
+  throw err;
+};
+
+async function market() {
+  const [kospi, kosdaq, fx, gold] = await Promise.allSettled([
+    firstOk(() => naverIndex('KOSPI'), () => yahoo('^KS11')),
+    firstOk(() => naverIndex('KOSDAQ'), () => yahoo('^KQ11')),
+    yahoo('KRW=X'),
+    yahoo('GC=F')
+  ]);
+  const v = r => (r.status === 'fulfilled' ? r.value : null);
+  const out = { KOSPI: v(kospi), KOSDAQ: v(kosdaq), USDKRW: v(fx), GOLD: v(gold), GOLD_DON: null };
+  // 국제 금값을 원화 1돈(3.75g)으로 환산 — 부가세·공임 제외, 국내 판매가와 다름
+  if (out.GOLD && out.USDKRW) {
+    const perGramUsd = out.GOLD.price / 31.1034768;
+    out.GOLD_DON = { price: Math.round(perGramUsd * 3.75 * out.USDKRW.price), rate: out.GOLD.rate };
+  }
+  return out;
+}
+
 module.exports = async (req, res) => {
-  const [c, w] = await Promise.allSettled([coin(), weather()]);
+  const [c, w, m] = await Promise.allSettled([coin(), weather(), market()]);
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   // 30초 동안은 캐시된 값을 재사용 (새로고침 연타 대비)
   res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
   res.status(200).send(JSON.stringify({
     at: new Date().toISOString(),
     coin: c.status === 'fulfilled' ? c.value : null,
-    weather: w.status === 'fulfilled' ? w.value : null
+    weather: w.status === 'fulfilled' ? w.value : null,
+    market: m.status === 'fulfilled' ? m.value : null
   }));
 };

@@ -181,6 +181,14 @@ a.alert::after{content:none}
 a.post-link{display:block;color:var(--ink);text-decoration:none;border-radius:6px;padding-inline:6px;margin-inline:-6px}
 a.post-link:hover,a.post-link:active{background:var(--accent-soft)}
 a.post-link .more{color:var(--accent)}
+.tick{display:flex;flex-wrap:wrap;align-items:center;gap:8px 20px;padding:10px 14px;background:var(--paper);border:1px solid var(--line);border-radius:8px}
+.tick-h .live{margin-left:0}
+.tk{display:flex;align-items:baseline;gap:6px;white-space:nowrap}
+.tk-k{font-size:12px;color:var(--muted)}
+.tk-v{font:500 15px var(--f-data);font-variant-numeric:tabular-nums}
+.tk-v.up{color:var(--up)} .tk-v.down{color:var(--down)}
+.tk-v small{font-size:11px;font-family:var(--f-body);color:var(--muted);margin-left:4px}
+.tick-note{flex-basis:100%;font-size:11px;color:var(--muted)}
 /* Footer */
 footer{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
 @media (max-width:800px){footer{grid-template-columns:1fr}}
@@ -205,6 +213,16 @@ textarea{width:100%;min-height:120px;resize:vertical;padding:10px;border:1px sol
     <div class="clock"><span id="today">-</span><strong id="now">--:--:--</strong></div>
   </div>
 </header>
+
+<div class="tick" id="liveBar" hidden>
+  <span class="tick-h"><span class="live" id="tickStamp"></span></span>
+  <span class="tk"><span class="tk-k">코스피</span><span class="tk-v num" id="tkKospi">-</span></span>
+  <span class="tk"><span class="tk-k">코스닥</span><span class="tk-v num" id="tkKosdaq">-</span></span>
+  <span class="tk"><span class="tk-k">원/달러</span><span class="tk-v num" id="tkFx">-</span></span>
+  <span class="tk"><span class="tk-k">국제 금 (온스)</span><span class="tk-v num" id="tkGold">-</span></span>
+  <span class="tk"><span class="tk-k">금 1돈 환산</span><span class="tk-v num" id="tkDon">-</span></span>
+  <span class="tk"><span class="tk-k">비트코인</span><span class="tk-v num" id="tkBtc">-</span></span>
+</div>
 
 <div class="grid">
   <!-- 왼쪽 단 -->
@@ -659,6 +677,28 @@ textarea{width:100%;min-height:120px;resize:vertical;padding:10px;border:1px sol
       document.getElementById('wxRange').textContent='오늘 '+Math.round(w.min)+'° / '+Math.round(w.max)+'° · 강수확률 '+(w.pop==null?'-':w.pop+'%');
       document.getElementById('wxStamp').textContent='실시간 '+hm;
       document.getElementById('wxLive').hidden=false;}
+  })();
+
+
+  // Live market bar (/api/live 의 market)
+  (async()=>{
+    let d;try{const r=await fetch('/api/live',{cache:'no-store'});if(!r.ok)return;d=await r.json();}catch(e){return;}
+    const m=d.market||{};let any=false;
+    const fmt=(v,dp)=>v.toLocaleString('en-US',{minimumFractionDigits:dp,maximumFractionDigits:dp});
+    const sign=(c,dp)=>c==null?'':(c>0?' ▲':c<0?' ▼':' ')+fmt(Math.abs(c),dp);
+    const pc=r=>r==null?'':' ('+(r>0?'+':r<0?'−':'')+Math.abs(r*100).toFixed(2)+'%)';
+    const put=(id,txt,rate,extra)=>{const el=document.getElementById(id);if(!el)return;el.textContent=txt;el.classList.remove('up','down');if(rate>0)el.classList.add('up');else if(rate<0)el.classList.add('down');if(extra){const s=document.createElement('small');s.textContent=extra;el.append(s);}any=true;};
+    const idx=(id,x)=>{if(!x)return;put(id,fmt(x.price,2)+sign(x.change,2)+pc(x.rate),x.rate,x.open===false?'마감':x.open===true?'장중':'');};
+    idx('tkKospi',m.KOSPI);idx('tkKosdaq',m.KOSDAQ);
+    if(m.USDKRW)put('tkFx',fmt(m.USDKRW.price,1)+'원'+sign(m.USDKRW.change,1),m.USDKRW.rate);
+    if(m.GOLD)put('tkGold','$'+fmt(m.GOLD.price,1)+pc(m.GOLD.rate),m.GOLD.rate);
+    if(m.GOLD_DON)put('tkDon',Math.round(m.GOLD_DON.price).toLocaleString('ko-KR')+'원',m.GOLD_DON.rate,'부가세·공임 제외');
+    const b=d.coin&&d.coin.BTC;
+    if(b){const v=b.price;put('tkBtc',(v>=1e8?Math.floor(v/1e8)+'억 '+Math.round((v%1e8)/1e4).toLocaleString('ko-KR')+'만':Math.round(v).toLocaleString('ko-KR'))+'원'+pc(b.rate),b.rate);}
+    if(!any)return;
+    const hm=new Date(d.at||Date.now()).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Seoul'});
+    document.getElementById('tickStamp').textContent='실시간 '+hm;
+    document.getElementById('liveBar').hidden=false;
   })();
 
   // Memo
