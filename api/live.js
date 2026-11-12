@@ -1,7 +1,8 @@
 // 나의 아침 데스크 — 실시간 데이터 (Vercel 서버 함수)
-// GET /api/live → { at, coin: { BTC, ETH, BTC_USD }, weather, market: { KOSPI, KOSDAQ, USDKRW, GOLD, GOLD_DON } }
+// GET /api/live → { at, coin: { BTC, ETH, BTC_USD }, weather, market: { KOSPI, KOSDAQ, USDKRW, GOLD, GOLD_DON }, claude: { status, code } }
 // 코인: 업비트 공개 시세 API / 날씨: Open-Meteo (서울)
 // 지수: 네이버 증권(실패 시 야후 파이낸스) / 환율·국제 금: 야후 파이낸스 — 모두 API 키 불필요
+// Claude: 공식 상태 페이지(status.claude.com) 요약 / Claude Code 최신 버전(npm 레지스트리)
 // 각 항목은 따로 가져오고, 하나가 실패해도 나머지는 그대로 보냅니다.
 
 const WMO = {
@@ -116,8 +117,29 @@ async function market() {
   return out;
 }
 
+// Claude 서비스 상태와 Claude Code 최신 버전
+async function claudeInfo() {
+  const [st, cc] = await Promise.allSettled([
+    getJson('https://status.claude.com/api/v2/summary.json'),
+    getJson('https://registry.npmjs.org/@anthropic-ai/claude-code/latest')
+  ]);
+  const out = { status: null, code: null };
+  if (st.status === 'fulfilled' && st.value && st.value.status) {
+    const s = st.value;
+    out.status = {
+      indicator: s.status.indicator || null,
+      description: s.status.description || null,
+      incidents: (s.incidents || []).slice(0, 3).map(i => ({ name: i.name, status: i.status })),
+      degraded: (s.components || []).filter(c => !c.group && c.status && c.status !== 'operational').map(c => c.name).slice(0, 4)
+    };
+  }
+  if (cc.status === 'fulfilled' && cc.value && cc.value.version) out.code = { version: cc.value.version };
+  if (!out.status && !out.code) throw new Error('claude info unavailable');
+  return out;
+}
+
 module.exports = async (req, res) => {
-  const [c, w, m] = await Promise.allSettled([coin(), weather(), market()]);
+  const [c, w, m, cl] = await Promise.allSettled([coin(), weather(), market(), claudeInfo()]);
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   // 30초 동안은 캐시된 값을 재사용 (새로고침 연타 대비)
   res.setHeader('Cache-Control', 's-maxage=30, stale-while-revalidate=60');
@@ -125,6 +147,7 @@ module.exports = async (req, res) => {
     at: new Date().toISOString(),
     coin: c.status === 'fulfilled' ? c.value : null,
     weather: w.status === 'fulfilled' ? w.value : null,
-    market: m.status === 'fulfilled' ? m.value : null
+    market: m.status === 'fulfilled' ? m.value : null,
+    claude: cl.status === 'fulfilled' ? cl.value : null
   }));
 };

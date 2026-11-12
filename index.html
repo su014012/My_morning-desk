@@ -11,6 +11,7 @@
 <style>
 /* Layout: 신문 1면처럼 3단 그리드(35/40/25) — 머리기사(브리핑)를 가운데, 좌측 일정, 우측 생활정보 */
 :root{
+  --ok:#1e8a4c;
   --bg:#eef0f3; --paper:#fbfbfc; --ink:#1b2333; --muted:#5d6678; --line:#d6dae2;
   --accent:#23407a; --accent-soft:#e3e9f5;
   --up:#c8322b; --down:#2556b8; --warn:#b26a00;
@@ -20,10 +21,10 @@
 }
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
   --bg:#12161e; --paper:#1a1f2a; --ink:#e6e9ef; --muted:#9aa3b5; --line:#2c3443;
-  --accent:#8fb0ee; --accent-soft:#223152; --up:#ff6b61; --down:#6f9bff; --warn:#f0a83a; color-scheme:dark}}
+  --accent:#8fb0ee; --accent-soft:#223152; --up:#ff6b61; --down:#6f9bff; --warn:#f0a83a; --ok:#5fd08b; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#12161e; --paper:#1a1f2a; --ink:#e6e9ef; --muted:#9aa3b5; --line:#2c3443;
-  --accent:#8fb0ee; --accent-soft:#223152; --up:#ff6b61; --down:#6f9bff; --warn:#f0a83a; color-scheme:dark}
+  --accent:#8fb0ee; --accent-soft:#223152; --up:#ff6b61; --down:#6f9bff; --warn:#f0a83a; --ok:#5fd08b; color-scheme:dark}
 
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font:15px/1.6 var(--f-body);
@@ -189,6 +190,22 @@ a.post-link .more{color:var(--accent)}
 .tk-v.up{color:var(--up)} .tk-v.down{color:var(--down)}
 .tk-v small{font-size:11px;font-family:var(--f-body);color:var(--muted);margin-left:4px}
 .tick-note{flex-basis:100%;font-size:11px;color:var(--muted)}
+/* Claude 소식 */
+.cl-live{display:flex;flex-direction:column;gap:6px;padding-bottom:10px;margin-bottom:10px;border-bottom:1px dashed var(--line)}
+.cl-row{display:flex;align-items:center;gap:8px;font-size:13px;flex-wrap:wrap}
+.cl-row .k{color:var(--muted);font-size:12px;min-width:76px}
+.cl-row a{color:var(--ink);text-decoration:none}
+.cl-row a:hover{color:var(--accent);text-decoration:underline}
+.cl-dot{width:9px;height:9px;border-radius:50%;background:var(--muted);flex:none}
+.cl-dot.ok{background:var(--ok)} .cl-dot.minor{background:var(--warn)} .cl-dot.bad{background:var(--up)}
+.cl-inc{font-size:12px;color:var(--muted);margin:0;padding-left:17px}
+.cl-models{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:13px;margin:0 0 4px}
+.cl-models dt{font-weight:600;white-space:nowrap} .cl-models dd{margin:0;color:var(--muted)}
+.cl-news{list-style:none;margin:0;padding:0}
+.cl-news li{padding:7px 0;border-top:1px dashed var(--line);font-size:13px}
+.cl-news li:first-child{border-top:0}
+.cl-news .d{font:500 11px var(--f-data);color:var(--muted);margin-right:6px}
+.cl-news small{display:block;color:var(--muted);font-size:12px}
 /* Footer */
 footer{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
 @media (max-width:800px){footer{grid-template-columns:1fr}}
@@ -381,6 +398,36 @@ textarea{width:100%;min-height:120px;resize:vertical;padding:10px;border:1px sol
       <p class="src" style="margin:8px 0 0">전일 대비 살 때 −17,000원(−2.23%), 팔 때 −12,000원, 18K −8,800원. 10일 밤 미 CPI가 예상보다 높게 나와 국제 금값이 약 3% 급락한 것이 국내 고시에 반영됐습니다. 11일 국제 금값은 $4,013까지 밀린 뒤 저가 매수로 소폭 반등했지만, 12월 금리 인상이 사실상 확정적으로 반영돼 이자 없는 금에는 부담이 이어지고 있습니다. 1돈 = 3.75g, 한국금거래소 기준.</p>
       <div class="cal-links">
         <a class="btn ghost" href="https://finance.naver.com/marketindex/goldDetail.naver" target="_blank" rel="noopener">네이버 금 시세 ↗</a>
+      </div>
+    </section>
+
+    <section>
+      <h2>🤖 Claude 소식 <small id="claudeAsOf">11/12 기준</small></h2>
+      <div class="cl-live" id="clLive" hidden>
+        <div class="cl-row"><span class="k">서비스 상태</span><span class="cl-dot" id="clDot"></span><a id="clStatus" href="https://status.claude.com/" target="_blank" rel="noopener">-</a><span class="live" id="clStamp"></span></div>
+        <ul class="cl-inc" id="clInc" hidden></ul>
+        <div class="cl-row" id="clCodeRow" hidden><span class="k">Claude Code</span><a class="num" id="clCode" href="https://www.npmjs.com/package/@anthropic-ai/claude-code?activeTab=versions" target="_blank" rel="noopener">-</a><span class="src">최신 버전</span></div>
+      </div>
+      <div class="subh" style="margin-top:0">현재 모델</div>
+      <dl class="cl-models" id="claudeModels">
+        <dt>Fable 5.2</dt><dd>가장 어려운 과제</dd>
+        <dt>Opus 5.5</dt><dd>복잡한 작업·일상 업무</dd>
+        <dt>Sonnet 5.5</dt><dd>간단한 작업에 효율적</dd>
+        <dt>Haiku 5.5</dt><dd>가장 빠른 답변</dd>
+      </dl>
+      <div class="subh">새 기능 · 업데이트</div>
+      <ul class="cl-news" id="claudeNews">
+        <li><span class="d">11/6</span><b>프로젝트 태그별 지출 추적</b> <span class="st check">베타</span><small>프로젝트에 태그를 달아 비용 코드별 사용액 확인 · Enterprise</small></li>
+        <li><span class="d">11/5</span><b>개인 재무 연결</b> <span class="st check">베타</span><small>은행·카드·투자 계좌를 연결해 잔액·지출 확인 · Pro·Max·Ultra, 미국 한정</small></li>
+        <li><span class="d">11/5</span><b>Enterprise 보안 센터·관리 제어</b><small>보안 센터, 중앙 관리, 접근 제어 추가 · Enterprise</small></li>
+        <li><span class="d">10/21</span><b>Claude Duet 연구 미리보기</b><small>Claude가 먼저 움직이는 에이전트형 새 앱 · Pro·Max</small></li>
+        <li><span class="d">10/7</span><b>Haiku 5.5 출시 · 월간 API 크레딧</b><small>가장 빠르고 저렴한 소형 모델 / Max·Team 플랜에 Claude 플랫폼 크레딧 포함</small></li>
+      </ul>
+      <div class="chips" style="margin-top:10px">
+        <a href="https://support.claude.com/ko/articles/12138966-%EB%A6%B4%EB%A6%AC%EC%8A%A4-%EB%85%B8%ED%8A%B8" target="_blank" rel="noopener">릴리스 노트</a>
+        <a href="https://claude.com/ko/resources/product-updates" target="_blank" rel="noopener">제품 업데이트</a>
+        <a href="https://platform.claude.com/docs/en/release-notes/overview" target="_blank" rel="noopener">플랫폼(API) 노트</a>
+        <a href="https://status.claude.com/" target="_blank" rel="noopener">서비스 상태</a>
       </div>
     </section>
 
@@ -752,6 +799,25 @@ textarea{width:100%;min-height:120px;resize:vertical;padding:10px;border:1px sol
     }
     if(Q){const q=document.getElementById('kosdaqVal');q.textContent=fmt(Q.price,2)+' '+pc(Q.rate);color(q,Q.rate);}
     if(G){const g=document.getElementById('goldIntl');g.textContent='$'+fmt(G.price,2)+' '+pc(G.rate);color(g,G.rate);document.getElementById('goldIntlK').textContent='국제 (온스) · 실시간';}
+  })();
+
+  // Claude 실시간 (/api/live 의 claude: 서비스 상태 · Claude Code 최신 버전)
+  (async()=>{
+    let d;try{const r=await fetch('/api/live',{cache:'no-store'});if(!r.ok)return;d=await r.json();}catch(e){return;}
+    const c=d.claude;if(!c)return;let any=false;
+    if(c.status){const s=c.status,ind=s.indicator||'none';
+      const KO={none:'정상 운영',minor:'일부 지연·장애',major:'주요 장애',critical:'심각한 장애',maintenance:'점검 중'};
+      document.getElementById('clStatus').textContent=KO[ind]||s.description||'확인 필요';
+      document.getElementById('clDot').className='cl-dot '+(ind==='none'?'ok':(ind==='minor'||ind==='maintenance')?'minor':'bad');
+      const inc=(s.incidents||[]).concat((s.degraded||[]).map(n=>({name:n+' (영향 있음)'})));
+      if(inc.length){const ul=document.getElementById('clInc');ul.innerHTML='';
+        inc.slice(0,4).forEach(i=>{const li=document.createElement('li');li.textContent=i.name;ul.append(li);});ul.hidden=false;}
+      any=true;}
+    if(c.code&&c.code.version){document.getElementById('clCode').textContent='v'+c.code.version;document.getElementById('clCodeRow').hidden=false;any=true;}
+    if(!any)return;
+    const hm=new Date(d.at||Date.now()).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Seoul'});
+    document.getElementById('clStamp').textContent='실시간 '+hm;
+    document.getElementById('clLive').hidden=false;
   })();
 
   // Memo
